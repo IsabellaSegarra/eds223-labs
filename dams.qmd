@@ -1,0 +1,120 @@
+---
+title: "dams"
+format: html
+---
+### Load Packages
+
+```{r}
+packages <- c("here", "janitor", "tidyverse", "sf", "terra", "tmap", "spData", "spDataLarge", "geodata", "kableExtra", "viridisLite")
+installed_packages <- packages %in% rownames(installed.packages())
+
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+```
+
+```{r}
+library(here)
+library(janitor)
+library(tidyverse)
+library(sf)
+library(kableExtra)
+```
+
+## Load data
+```{r}
+gdw_df <- read_csv(here("data", "gdw.csv")) %>% 
+  clean_names()
+```
+
+## Data exploration
+```{r}
+gdw_df_first_10_rows <- head(gdw_df, n = 10)
+gdw_df_last_10_rows <- tail(gdw_df, n = 10)
+```
+
+
+```{r}
+kable(gdw_df_first_10_rows)
+```
+
+
+```{r}
+kable(gdw_df_last_10_rows)
+```
+```{r}
+print(nrow(gdw_df))
+```
+```{r}
+print(ncol(gdw_df))
+```
+
+
+```{r}
+print(colnames(gdw_df))
+```
+## Index, Summarize, Subset Data
+```{r}
+gdw_df_country <- gdw_df["country"]
+
+class(gdw_df_country) 
+```
+
+```{r}
+#Use group_by() and summarise() to find the number of dams by dam type in gdw_df
+gdw_df_dam_type <- gdw_df %>% 
+  group_by(dam_type) %>% 
+  summarise(count = n())
+```
+
+```{r}
+#Make a subset called sub_dam that only contains entries for dam_type == "Dam"
+
+sub_dam <- gdw_df %>%
+  filter(dam_type == "Dam")
+
+```
+
+```{r}
+#Re-order gdw_df by ascending order of installation year
+
+gdw_df_ascending_year <- gdw_df  %>%
+  group_by(year_dam) %>% 
+  arrange(year_dam, descending = FALSE)
+
+```
+
+## Data viz
+```{r}
+# Make a bar graph of average height of dam/barrier in meters (dam_hgt_m) by country
+
+#isolate data to be used 
+plot_data <- gdw_df %>% 
+  group_by(country) %>% 
+  summarize(avg_dam_hgt = mean(dam_hgt_m, na.rm = TRUE))
+```
+
+
+```{r}
+
+#plot data 
+ggplot(data = plot_data, aes(x = country, y = avg_dam_hgt)) +
+    geom_bar(stat = "identity") +
+    labs(x = "Country",
+         y = "Average height of dam/barrier in meters") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+  
+```
+```{r}
+# Make a scatterplot of height of dam/barrier versus representative maximum storage capacity of reservoir in million cubic meters (cap_mcm)
+
+ggplot(data = gdw_df, aes(x = cap_mcm, y = dam_hgt_m)) +
+  geom_point() +
+    labs(x = "Storage capacity of reservoir in million cubic meters",
+       y = "Height of dam/barrier in meters") +
+  theme_minimal()
+  
+```
+
+
